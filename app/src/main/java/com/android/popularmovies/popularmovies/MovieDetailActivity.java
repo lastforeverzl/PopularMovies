@@ -45,6 +45,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
     private static final String EXTRA_MOVIE_DETAIL = "com.android.popularmovies.movie_detail";
     private static final String REVIEW_PAGE = "1";
 
+    private static final String BUNDLE_SCROLLVIEW_LAYOUT = "MovieDetailActivity.scrollview.layout";
+
     public static final String[] CHECK_FAVORITE_PROJECTION = {
             FavoriteEntry.COLUMN_MOVIE_ID,
             FavoriteEntry.COLUMN_MOVIE_ORIGINAL_TITLE
@@ -61,6 +63,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
     private ReviewsAdapter mReviewsAdapter;
 
     private boolean isInFavorite = false;
+
+    private int[] scrollViewPosition;
 
     public static Intent newIntent(Context context, Movie movie) {
         Intent i = new Intent(context, MovieDetailActivity.class);
@@ -83,6 +87,22 @@ public class MovieDetailActivity extends AppCompatActivity implements
         mActivityDetailBinding.setMovie(mMovie);
         checkFavorite(this);
         loadData();
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putIntArray(BUNDLE_SCROLLVIEW_LAYOUT,
+                new int[]{ mNestedScrollView.getScrollX(), mNestedScrollView.getScrollY()});
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            scrollViewPosition = savedInstanceState.getIntArray(BUNDLE_SCROLLVIEW_LAYOUT);
+        }
     }
 
     @Override
@@ -92,7 +112,6 @@ public class MovieDetailActivity extends AppCompatActivity implements
             VideosResponse results = (VideosResponse) responseBody;
             List<Video> videos = results.getResults();
             mTrailersAdapter.setVideos(videos);
-
         } else if (responseBody instanceof ReviewsResponse) {
             ReviewsResponse results = (ReviewsResponse) responseBody;
             List<Review> reviews;
@@ -103,6 +122,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 Log.d(TAG, "No Reviews");
             }
         }
+        scrollToSavedPosition();
     }
 
     @Override
@@ -128,6 +148,18 @@ public class MovieDetailActivity extends AppCompatActivity implements
         Call reviewsCall = NetworkUtils.loadMovieReviews(mMovie.getId(), REVIEW_PAGE);
         reviewsCall.enqueue(this);
         reviewsRecyclerView.setAdapter(mReviewsAdapter);
+    }
+
+    private void scrollToSavedPosition() {
+        if (scrollViewPosition != null) {
+            mNestedScrollView.post(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "in run");
+                    mNestedScrollView.scrollTo(scrollViewPosition[0], scrollViewPosition[1]);
+                }
+            });
+        }
     }
 
     @Override

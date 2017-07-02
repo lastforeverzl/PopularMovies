@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <import type="com.android.popularmovies.popularmovies.entity.Video" />
+        <variable
+            name="video"
+            type="Video" />
+    </data>
+
+    <LinearLayout android:orientation="horizontal"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/im_play"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_play_arrow_black_24dp"/>
+
+        <TextView
+            android:id="@+id/tv_trailer_title"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="@{video.name}"
+            tools:text="the trailer"
+            android:gravity="center_vertical"/>
+
+    </LinearLayout>
+</layout>

@@ -41,8 +41,8 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private static final String POPULAR_MOVIES = "popular_movies";
-    private static final String TOP_RATED_MOVIES = "top_rated_movies";
+    private static final String POPULAR_MOVIES = "popular";
+    private static final String TOP_RATED_MOVIES = "top_rated";
     private static final String FAVORITE_MOVIES = "favorite_movies";
     private static final int ID_MOVIES_LOADER = 41;
 
@@ -144,13 +144,8 @@ public class MainActivity extends AppCompatActivity implements
 
     private void loadMoreData(String order) {
         showDataView();
-        if (order.equals(POPULAR_MOVIES)) {
-            Call<MoviesResponse> call = NetworkUtils.loadPopular(String.valueOf(currentPage));
-            call.enqueue(this);
-        } else if (order.equals(TOP_RATED_MOVIES)) {
-            Call<MoviesResponse> call = NetworkUtils.loadTopRated(String.valueOf(currentPage));
-            call.enqueue(this);
-        }
+        Call<MoviesResponse> call = NetworkUtils.loadMovies(order, String.valueOf(currentPage));
+        call.enqueue(this);
     }
 
     private void loadDataFromBundle(Bundle savedInstanceState) {

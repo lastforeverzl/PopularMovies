@@ -15,13 +15,10 @@ import retrofit2.http.Query;
 
 public interface TmdbService {
 
-    @GET("movie/popular")
-    Call<MoviesResponse> getPopular(@Query("api_key") String apiKey,
-                                    @Query("page") String page);
-
-    @GET("movie/top_rated")
-    Call<MoviesResponse> getTopRated(@Query("api_key") String apiKey,
-                                     @Query("page") String page);
+    @GET("movie/{order}")
+    Call<MoviesResponse> getMovies(@Path("order") String order,
+                                   @Query("api_key") String apiKey,
+                                   @Query("page") String page);
 
     @GET("movie/{id}/videos")
     Call<VideosResponse> getVideos(@Path("id") int movieId,

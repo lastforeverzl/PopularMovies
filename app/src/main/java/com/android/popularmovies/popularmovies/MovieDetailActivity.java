@@ -135,7 +135,9 @@ public class MovieDetailActivity extends AppCompatActivity implements
         String video = "https://www.youtube.com/watch?v=" + key;
         Intent openVideo = new Intent(Intent.ACTION_VIEW);
         openVideo.setData(Uri.parse(video));
-        startActivity(openVideo);
+        if (openVideo.resolveActivity(getPackageManager()) != null) {
+            startActivity(openVideo);
+        }
     }
 
     public void addFavorite(View view) {

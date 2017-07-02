@@ -19,12 +19,8 @@ public class NetworkUtils {
         return Api.instance().getApi();
     }
 
-    public static Call<MoviesResponse> loadPopular(String page) {
-        return getApi().getPopular(BuildConfig.API_KEY, page);
-    }
-
-    public static Call<MoviesResponse> loadTopRated(String page) {
-        return getApi().getTopRated(BuildConfig.API_KEY, page);
+    public static Call<MoviesResponse> loadMovies(String order, String page) {
+        return getApi().getMovies(order, BuildConfig.API_KEY, page);
     }
 
     public static Call<VideosResponse> loadMovieVideos(int movieId) {

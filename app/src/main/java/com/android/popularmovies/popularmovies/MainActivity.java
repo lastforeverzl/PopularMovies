@@ -45,8 +45,12 @@ public class MainActivity extends AppCompatActivity implements
     private static final String TOP_RATED_MOVIES = "top_rated_movies";
     private static final String FAVORITE_MOVIES = "favorite_movies";
     private static final int ID_MOVIES_LOADER = 41;
+
     private static final String BUNDLE_RECYCLER_LAYOUT = "MainActivity.recycler.layout";
     private static final String BUNDLE_MOVIE_LIST = "MainActivity.recycler.moiveList";
+    private static final String BUNDLE_CURRENT_PAGE = "MainActivity.currentPage";
+    private static final String BUNDLE_MAX_PAGE = "MainActivity.maxPage";
+    private static final String BUNDLE_SORT_CRITERIA = "MainActivity.SortCriteria";
 
     public static final String[] MOVIES_QUERY_PROJECTION = {
             FavoriteContract.FavoriteEntry.COLUMN_MOVIE_ID,
@@ -90,12 +94,10 @@ public class MainActivity extends AppCompatActivity implements
         mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
         setupRecyclerView();
         if (savedInstanceState == null) {
-            Log.d(TAG, "savedInstanceState == null");
             loadData(POPULAR_MOVIES);
         } else {
-            mLoadingIndicator.setVisibility(View.INVISIBLE);
+            loadDataFromBundle(savedInstanceState);
         }
-
         getSupportLoaderManager().initLoader(ID_MOVIES_LOADER, null, this);
     }
 
@@ -135,7 +137,9 @@ public class MainActivity extends AppCompatActivity implements
 
     private void loadData(String order) {
         currentPage = 1;
+        mLoadingIndicator.setVisibility(View.VISIBLE);
         loadMoreData(order);
+        scrollToTop();
     }
 
     private void loadMoreData(String order) {
@@ -147,6 +151,15 @@ public class MainActivity extends AppCompatActivity implements
             Call<MoviesResponse> call = NetworkUtils.loadTopRated(String.valueOf(currentPage));
             call.enqueue(this);
         }
+    }
+
+    private void loadDataFromBundle(Bundle savedInstanceState) {
+        mLoadingIndicator.setVisibility(View.INVISIBLE);
+        List<Movie> movies = savedInstanceState.getParcelableArrayList(BUNDLE_MOVIE_LIST);
+        mMoviesAdapter.setMovieList(movies);
+        currentPage = savedInstanceState.getInt(BUNDLE_CURRENT_PAGE);
+        maxPage = savedInstanceState.getInt(BUNDLE_MAX_PAGE);
+        sortCriteria = savedInstanceState.getString(BUNDLE_SORT_CRITERIA);
     }
 
     private void queryDB() {
@@ -185,6 +198,11 @@ public class MainActivity extends AppCompatActivity implements
     private void showErrorMessage() {
         mRecyclerView.setVisibility(View.INVISIBLE);
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
+    }
+
+    private void scrollToTop() {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        layoutManager.scrollToPositionWithOffset(0, 0);
     }
 
     private void setupRecyclerView() {
@@ -262,6 +280,9 @@ public class MainActivity extends AppCompatActivity implements
         super.onSaveInstanceState(outState);
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, mRecyclerView.getLayoutManager().onSaveInstanceState());
         outState.putParcelableArrayList(BUNDLE_MOVIE_LIST, mMoviesAdapter.getMovieList());
+        outState.putInt(BUNDLE_CURRENT_PAGE, currentPage);
+        outState.putInt(BUNDLE_MAX_PAGE, maxPage);
+        outState.putString(BUNDLE_SORT_CRITERIA, sortCriteria);
     }
 
     @Override

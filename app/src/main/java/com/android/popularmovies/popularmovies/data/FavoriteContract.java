@@ -8,13 +8,15 @@ import android.provider.BaseColumns;
  * Created by lei on 6/30/17.
  */
 
-public class FavoriteContract {
+public final class FavoriteContract {
 
     public static final String CONTENT_AUTHORITY = "com.android.popularmovies.popularmovies";
 
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String PATH_FAVORITE = "favorite";
+
+    private FavoriteContract() {}
 
     public static final class FavoriteEntry implements BaseColumns {
 

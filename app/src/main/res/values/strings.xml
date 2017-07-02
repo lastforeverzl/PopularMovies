@@ -7,7 +7,7 @@
     <string name="trailers">Trailers</string>
     <string name="reviews">Reviews</string>
 
-    <string name="content_authority">com.android.popularmovies.popularmovies</string>
+    <string name="content_authority" translatable="false">com.android.popularmovies.popularmovies</string>
     <string name="add_to_favorite">Movie added to Favorite!</string>
     <string name="remove_from_favorite">Movie removed from Favorite.</string>
     <string name="add_button">add to favorite</string>

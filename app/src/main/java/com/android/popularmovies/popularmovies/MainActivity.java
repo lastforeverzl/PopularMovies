@@ -26,6 +26,8 @@ import com.android.popularmovies.popularmovies.data.FavoriteContract;
 import com.android.popularmovies.popularmovies.entity.Movie;
 import com.android.popularmovies.popularmovies.entity.MoviesResponse;
 import com.android.popularmovies.popularmovies.network.NetworkUtils;
+import com.android.popularmovies.popularmovies.utility.DisplayUtils;
+import com.android.popularmovies.popularmovies.utility.EndlessRecyclerViewScrollListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,9 +80,10 @@ public class MainActivity extends AppCompatActivity implements
 
     private String sortCriteria = POPULAR_MOVIES;
 
-    private boolean isLoading = false;
     private int currentPage = 1;
-    private static int maxPage = Integer.MAX_VALUE;
+//    private static int maxPage = Integer.MAX_VALUE;
+
+    private EndlessRecyclerViewScrollListener scrollListener;
 
     private List<Movie> mFavoriteMovieList = new ArrayList<>();
 
@@ -122,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements
                 return true;
             case R.id.action_favorite:
                 sortCriteria = FAVORITE_MOVIES;
+                scrollListener.resetState();
                 queryDB();
                 return true;
             default:
@@ -136,48 +140,42 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void loadData(String order) {
-        currentPage = 1;
         mLoadingIndicator.setVisibility(View.VISIBLE);
-        loadMoreData(order);
+        mMoviesAdapter.clearMovieList();
+        scrollListener.resetState();
+        loadMoreData(1, order);
         scrollToTop();
-    }
-
-    private void loadMoreData(String order) {
-        showDataView();
-        Call<MoviesResponse> call = NetworkUtils.loadMovies(order, String.valueOf(currentPage));
-        call.enqueue(this);
     }
 
     private void loadDataFromBundle(Bundle savedInstanceState) {
         mLoadingIndicator.setVisibility(View.INVISIBLE);
         List<Movie> movies = savedInstanceState.getParcelableArrayList(BUNDLE_MOVIE_LIST);
-        mMoviesAdapter.setMovieList(movies);
         currentPage = savedInstanceState.getInt(BUNDLE_CURRENT_PAGE);
-        maxPage = savedInstanceState.getInt(BUNDLE_MAX_PAGE);
+//        maxPage = savedInstanceState.getInt(BUNDLE_MAX_PAGE);
         sortCriteria = savedInstanceState.getString(BUNDLE_SORT_CRITERIA);
+
+        scrollListener.setStartPage(currentPage);
+        mMoviesAdapter.clearMovieList();
+        mMoviesAdapter.addToMovieList(movies);
     }
 
     private void queryDB() {
-        mMoviesAdapter.setMovieList(mFavoriteMovieList);
+        mMoviesAdapter.clearMovieList();
+        mMoviesAdapter.addToMovieList(mFavoriteMovieList);
     }
 
     @Override
     public void onResponse(Call<MoviesResponse> call, Response<MoviesResponse> response) {
         MoviesResponse results = response.body();
         List<Movie> movies = results.getResults();
-        maxPage = results.getTotalPages();
+//        maxPage = results.getTotalPages();
 
         mLoadingIndicator.setVisibility(View.INVISIBLE);
         if (movies != null) {
-            if (currentPage == 1)
-                mMoviesAdapter.setMovieList(movies);
-            else
-                mMoviesAdapter.updateMovieList(movies);
-            currentPage++;
+            mMoviesAdapter.addToMovieList(movies);
         } else {
             showErrorMessage();
         }
-        isLoading = false;
     }
 
     @Override
@@ -201,30 +199,30 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void setupRecyclerView() {
+        int numberOfColumns = DisplayUtils.calculateNoOfColumns(this);
         GridLayoutManager gridLayoutManager
-                = new GridLayoutManager(this, 2, LinearLayoutManager.VERTICAL, false);
+                = new GridLayoutManager(this, numberOfColumns, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(gridLayoutManager);
         mRecyclerView.setHasFixedSize(true);
 
         mMoviesAdapter = new MoviesAdapter(MainActivity.this, this);
         mRecyclerView.setAdapter(mMoviesAdapter);
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
 
-                int lastVisibleItem = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastVisibleItemPosition();
-                int totalItemCount = recyclerView.getLayoutManager().getItemCount();
-                if (lastVisibleItem >= totalItemCount - 2 && dy > 0 && !isLoading) {
-                    if (currentPage <= maxPage) {
-                        isLoading = true;
-                        loadMoreData(sortCriteria);
-                    } else {
-                        showLastPageMesage();
-                    }
+        scrollListener = new EndlessRecyclerViewScrollListener(gridLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                if (!sortCriteria.equals(FAVORITE_MOVIES)) {
+                    loadMoreData(page, sortCriteria);
                 }
             }
-        });
+        };
+        mRecyclerView.addOnScrollListener(scrollListener);
+    }
+
+    private void loadMoreData(int page, String order) {
+        showDataView();
+        Call<MoviesResponse> call = NetworkUtils.loadMovies(order, String.valueOf(page));
+        call.enqueue(this);
     }
 
     private void showLastPageMesage() {
@@ -265,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements
             data.moveToNext();
         }
         if (sortCriteria.equals(FAVORITE_MOVIES)) {
-            mMoviesAdapter.setMovieList(mFavoriteMovieList);
+            queryDB();
         }
         Log.d(TAG, "cursor finished");
     }
@@ -275,8 +273,9 @@ public class MainActivity extends AppCompatActivity implements
         super.onSaveInstanceState(outState);
         outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, mRecyclerView.getLayoutManager().onSaveInstanceState());
         outState.putParcelableArrayList(BUNDLE_MOVIE_LIST, mMoviesAdapter.getMovieList());
+        currentPage = scrollListener.getCurrentPage();
         outState.putInt(BUNDLE_CURRENT_PAGE, currentPage);
-        outState.putInt(BUNDLE_MAX_PAGE, maxPage);
+//        outState.putInt(BUNDLE_MAX_PAGE, maxPage);
         outState.putString(BUNDLE_SORT_CRITERIA, sortCriteria);
     }
 

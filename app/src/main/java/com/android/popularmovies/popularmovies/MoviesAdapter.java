@@ -58,18 +58,13 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesView
         return (ArrayList<Movie>) mMovieList;
     }
 
-    public void setMovieList(List<Movie> list) {
-        if (mMovieList != null) {
-            mMovieList.clear();
-        }
+    public void addToMovieList(List<Movie> list) {
         mMovieList.addAll(list);
         notifyDataSetChanged();
     }
 
-    public void updateMovieList(List<Movie> list) {
-        if (mMovieList != null) {
-            mMovieList.addAll(list);
-        }
+    public void clearMovieList() {
+        mMovieList.clear();
         notifyDataSetChanged();
     }
 
